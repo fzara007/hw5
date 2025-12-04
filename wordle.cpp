@@ -1,9 +1,8 @@
 #ifndef RECCHECK
 // For debugging
-#include <iostream>
+// #include <iostream>
 // For std::remove
-#include <algorithm> 
-#include <map>
+#include <algorithm>
 #include <set>
 #endif
 
@@ -11,9 +10,12 @@
 #include "dict-eng.h"
 using namespace std;
 
+// int counter;
 
 // Add prototypes of helper functions here
-bool isValid(string in, string floating, string potential);
+void wordleHelper(
+			string& in, size_t index, int yellows[26], size_t numYellows, 
+			set<string>& words, const set<string>& dict);
 
 // Definition of primary wordle function
 std::set<std::string> wordle(
@@ -22,52 +24,72 @@ std::set<std::string> wordle(
     const std::set<std::string>& dict)
 {
     // Add your code here
-		set<string> results;
-		set<string>::iterator it; 
-		// for all words in the dict, add if valid
-		for(it=dict.begin(); it!=dict.end(); ++it)
-		{
-			// check if right length
-			if((*it).size()!=in.size()) continue;
-			if(isValid(in, floating, *it)) results.insert(*it);
-		}
-
-		return results;
+		set<string> possibleWords; 
+		// vector<char> yellows(floating.begin(), floating.end());
+		int yellows[26] = {0};
+		for(char c : floating) yellows[c-'a']++;
+		string word = in;
+		wordleHelper(word, 0, yellows, floating.size(), possibleWords, dict);
+		// std::cout << "counter: " << counter << std::endl;
+		return possibleWords;
 }
 
 // Define any helper functions here
-bool isValid(string in, string floating, string potential)
+void wordleHelper(
+			string& in, size_t index, int yellows[26], size_t numYellows, 
+			set<string>& words, const set<string>& dict)
 {
-	// essentially maps characters in floating to an array
-	// first index is the # times it appears in potential
-	//  second index is the # times it should be in potential
-	map<char, int[2]> yellows;
-	
-	// setting up initial array for all keys
-	for(unsigned int i= 0; i<floating.size(); i++)
+	// counter++;
+	// base cases
+	// if(in.size()==0) return;
+	if(index==in.size())
 	{
-		yellows[floating[i]][0] = 0;
-		if (yellows[floating[i]][1] != 0) 
-			yellows[floating[i]][1] = yellows[floating[i]][1]+1;
-		else 
-			yellows[floating[i]][1] = 1;
+		// word is in dictionary and have the yellow chars
+		// if(dict.find(in)!=dict.end() && yellows.empty())
+		if(numYellows==0 && dict.find(in)!=dict.end()) 
+				words.insert(in);
+		return;
 	}
 
-	for(unsigned int i=0; i<potential.size(); i++)
-	{
-		// checking for uppercase
-		if(potential[i]>='A' && potential[i]<='Z') return false;
-		// green letter is not in word
-		if(in[i]!='-' && potential[i]!=in[i]) return false;
-		// found a yellow letter, updating first index of array
-		if(floating.find(potential[i])!=-1)
-				yellows[potential[i]][0] = yellows[potential[i]][0] + 1;
-	}
+	// if(yellows.size()>in.size()-index) return;
+	if(numYellows>in.size()-index) return;
 
-	// checking if yellows showed up the right number of times
-	map<char, int[2]>::iterator it;
-	for(it=yellows.begin(); it!=yellows.end(); ++it)
-		if((*it).second[0]<(*it).second[1]) return false;
-	
-	return true;
+	if(in[index]!='-') return wordleHelper(in, index+1, yellows, numYellows, words, dict);
+
+	// going through all the letters for this index
+	for(int let=0; let<26; let++)
+	{
+		// // setting the bool for if this is a yellow letter
+		// vector<char>::iterator it = find(yellows.begin(), yellows.end(), ('a'+let));
+		// bool found = it != yellows.end();
+		// // removing it from the vector for the base case check
+		// if(found) yellows.erase(it);
+
+		// bool found = yellows[let]!=0;
+		yellows[let]--;
+		bool found = yellows[let]>=0;
+		if(found) 
+		{
+			numYellows--;
+		}
+		
+
+		// inserting it to in to keep trying combos
+		in[index] = (char)('a'+let);
+
+		if(numYellows<=in.size()-index-1)
+			wordleHelper(in, index + 1, yellows, numYellows, words, dict);
+		
+		// combos failed, resetting changed vals
+		// if(found) yellows.push_back('a'+let);
+		if(found)
+		{
+			numYellows++;
+		}
+		yellows[let]++;
+
+		
+	}
+	// resorting to original char 		
+	in[index] = '-';
 }

@@ -1,6 +1,5 @@
 #ifndef RECCHECK
 #include <set>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -46,12 +45,12 @@ bool schedule(
     DailySchedule& sched
 )
 {
-    int badShift=-1;
     if(avail.size() == 0){
         return false;
     }
     sched.clear();
     // Add your code below
+    int badShift=-1;
     for(size_t n=0; n<avail.size(); n++)
     {
         vector<Worker_T> row;
