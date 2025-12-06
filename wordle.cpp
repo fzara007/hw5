@@ -25,12 +25,11 @@ std::set<std::string> wordle(
 {
     // Add your code here
 		set<string> possibleWords; 
-		// vector<char> yellows(floating.begin(), floating.end());
+		// array for how many times a letter is in floating
 		int yellows[26] = {0};
 		for(char c : floating) yellows[c-'a']++;
 		string word = in;
 		wordleHelper(word, 0, yellows, floating.size(), possibleWords, dict);
-		// std::cout << "counter: " << counter << std::endl;
 		return possibleWords;
 }
 
@@ -39,55 +38,43 @@ void wordleHelper(
 			string& in, size_t index, int yellows[26], size_t numYellows, 
 			set<string>& words, const set<string>& dict)
 {
-	// counter++;
 	// base cases
-	// if(in.size()==0) return;
 	if(index==in.size())
 	{
 		// word is in dictionary and have the yellow chars
-		// if(dict.find(in)!=dict.end() && yellows.empty())
 		if(numYellows==0 && dict.find(in)!=dict.end()) 
 				words.insert(in);
 		return;
 	}
-
-	// if(yellows.size()>in.size()-index) return;
+	// there are more yellows than spaces 
 	if(numYellows>in.size()-index) return;
 
+  // found a green letter, move on
 	if(in[index]!='-') return wordleHelper(in, index+1, yellows, numYellows, words, dict);
 
 	// going through all the letters for this index
 	for(int let=0; let<26; let++)
 	{
-		// // setting the bool for if this is a yellow letter
-		// vector<char>::iterator it = find(yellows.begin(), yellows.end(), ('a'+let));
-		// bool found = it != yellows.end();
-		// // removing it from the vector for the base case check
-		// if(found) yellows.erase(it);
-
-		// bool found = yellows[let]!=0;
-		yellows[let]--;
-		bool found = yellows[let]>=0;
+		// setting the bool for if this is a yellow letter
+		bool found = yellows[let]>0;
 		if(found) 
 		{
+			// decreasing count for total yellows, and in the array
+			yellows[let]--;
 			numYellows--;
 		}
 		
-
 		// inserting it to in to keep trying combos
 		in[index] = (char)('a'+let);
-
-		if(numYellows<=in.size()-index-1)
-			wordleHelper(in, index + 1, yellows, numYellows, words, dict);
+		
+		wordleHelper(in, index + 1, yellows, numYellows, words, dict);
 		
 		// combos failed, resetting changed vals
-		// if(found) yellows.push_back('a'+let);
 		if(found)
 		{
 			numYellows++;
+			yellows[let]++;
 		}
-		yellows[let]++;
-
 		
 	}
 	// resorting to original char 		
